@@ -56,6 +56,7 @@ if (process.env.VCAP_SERVICES) {
 	var twilioMyNumber = '+18022824507';
 	
 	var mongoCredentials = services['mongodb-2.2'][0].credentials;
+	mongoCredentials.auto_reconnect = "true";
 	mongoInitUsers();
 }
 
