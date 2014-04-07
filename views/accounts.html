@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<title>BlueBox File Storage</title>
+	<link href="/stylesheets/bootstrap.css" rel="stylesheet">
+	<style>
+		.hero-unit {
+			margin-top: 60px;
+		}
+	</style>
+	<script src="/javascripts/bootstrap.min.js"></script>
+	<!--[if lt IE 9]><script language="javascript" type="text/javascript" src="/javascripts/excanvas.js"></script><![endif]-->
+	<script language="javascript" type="text/javascript" src="/javascripts/jquery.min.js"></script>
+	<script language="javascript" type="text/javascript" src="/javascripts/jquery.jqplot.min.js"></script>
+	<script type="text/javascript" src="/javascripts/plugins/jqplot.barRenderer.min.js"></script>
+	<script type="text/javascript" src="/javascripts/plugins/jqplot.pieRenderer.min.js"></script>
+	<script type="text/javascript" src="/javascripts/plugins/jqplot.categoryAxisRenderer.min.js"></script>
+	<script type="text/javascript" src="/javascripts/plugins/jqplot.pointLabels.min.js"></script>
+	
+	<link rel="stylesheet" type="text/css" href="/stylesheets/jquery.jqplot.css" />
+	<script>
+
+		
+		function renderAccounts(accounts){
+			var accountTable = document.getElementById("accountTable");
+			while (accountTable.rows.length > 1) { accountTable.deleteRow(1) }
+			for (i in accounts) {
+				var account = accounts[i];
+	
+				var newRow = accountTable.insertRow(accountTable.rows.length);
+				
+				newRow.insertCell(0).appendChild(document.createTextNode(account._id));
+				newRow.insertCell(1).appendChild(document.createTextNode(account.username));
+				newRow.insertCell(2).appendChild(document.createTextNode(account.email));
+				newRow.insertCell(3).appendChild(document.createTextNode(account.cellNumber));
+				
+				var aNode = document.createElement("a");
+				aNode.setAttribute("onClick", "deleteAccount('"+account._id+"');");
+				aNode.setAttribute("href", "javascript:void(0)");
+				aNode.setAttribute("class", "btn btn-warning");
+				aNode.appendChild(document.createTextNode("delete"));
+				
+				newRow.insertCell(4).appendChild(aNode);
+			}
+		}
+		
+		// show existing accounts
+		function getAccounts(){
+			var XHR = new XMLHttpRequest();
+			XHR.addEventListener('load', function(event) {
+				renderAccounts(JSON.parse(this.responseText));
+			});
+			XHR.addEventListener('error', function(event) {
+				alert('Something went wrong.');
+			});
+			XHR.open('GET', "accountsAPI");
+			XHR.send();
+		}
+					
+		// add new account
+		function addAccount(){
+			var XHR = new XMLHttpRequest();
+			var FD  = new FormData(form);
+			XHR.addEventListener('load', function(event) {
+				renderAccounts(JSON.parse(this.responseText));
+			});
+			XHR.addEventListener('error', function(event) {
+				alert('Something went wrong.');
+			});
+			XHR.open('POST', "accountsAPI");
+			XHR.send(FD);
+		}
+		
+		// delete account
+		function deleteAccount(_id){
+			var XHR = new XMLHttpRequest();
+			XHR.addEventListener('load', function(event) {
+				renderAccounts(JSON.parse(this.responseText));
+			});
+			XHR.addEventListener('error', function(event) {
+				alert('Something went wrong.');
+			});
+			XHR.open('DELETE', "accountsAPI/"+_id);
+			XHR.send();
+		}
+		
+		
+		window.addEventListener("load", function () {
+			
+			getAccounts();
+			
+			var form = document.getElementById("accountForm");
+			// takeover its submit event.
+			form.addEventListener("submit", function (event) {
+				event.preventDefault();
+				addAccount();
+			});
+	});
+	</script>
+</head>
+<meta charset="utf-8">
+<body>
+	<div class="container">
+		<div class="hero-unit">
+			<div class="pull-right">    
+				<a href="/delete" class="btn btn-danger" title="delete all">delete everything</a>
+				<a href="/logout" class="btn btn-warning" title="logout">logout "{{user}}"</a>
+			</div>
+			<div class="pull-left">
+				<a href="/" class="btn btn-success" title="repository">repository</a>
+				<a href="/accounts" class="btn btn-inactive" title="accounts">accounts</a>
+			</div>
+			<div class="text-center">
+				<br><br>
+				<h1><a href="/">BlueBox</a> File Storage</h1>
+				<h2>MySQL/Redis back end with enterprise level retention management, MongoDB session persistence, stateless middleware</h2>
+				<hr>
+				<h3>add account</h3>
+				<p>
+					<form id="accountForm">
+						<p style="text-align: right, width: 600px">username: <input type="text" name="username" /></p>
+						<p style="text-align: right, width: 600px">password: <input type="text" name="password"/></p>
+						<p style="text-align: right, width: 600px">email: <input type="text" name="email"/></p>
+						<p style="text-align: right, width: 600px">cell number: <input type="text" name="cellNumber"/></p>
+						<input type="submit" class="btn btn-success" value="add account">
+					</form>
+				</p>
+				<hr>
+				
+				{{#msg}}<div class="alert alert-info">{{msg}}</div>{{/msg}}
+			</div>
+		</div>
+		<div>
+			<h3>current user accounts</h3>
+			<table class="table" id="accountTable">
+				<tr><th>ID</th><th>username</th><th>email</th><th>cell number</th><th></th></tr>
+				{{#accounts}}
+					<tr id="{{_id}}">
+						<td>{{_id}}</td>
+						<td>{{username}}</td>
+						<td>{{email}}</td>
+						<td>{{cellNumber}}</td>
+						<td><a href="/" class="btn btn-warning" title="delete this account">delete</a></td>
+					</tr>
+				{{/accounts}}
+			</table>
+		</div>
+	</div>
+</body>
+
+</html>

@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<title>BlueBox File Storage</title>
+	<link href="/stylesheets/bootstrap.css" rel="stylesheet">
+	<style>
+		.hero-unit {
+			margin-top: 60px;
+		}
+	</style>
+	<script src="/javascripts/bootstrap.min.js"></script>
+	<!--[if lt IE 9]><script language="javascript" type="text/javascript" src="/javascripts/excanvas.js"></script><![endif]-->
+	<script language="javascript" type="text/javascript" src="/javascripts/jquery.min.js"></script>
+	<script language="javascript" type="text/javascript" src="/javascripts/jquery.jqplot.min.js"></script>
+	<script type="text/javascript" src="/javascripts/plugins/jqplot.barRenderer.min.js"></script>
+	<script type="text/javascript" src="/javascripts/plugins/jqplot.pieRenderer.min.js"></script>
+	<script type="text/javascript" src="/javascripts/plugins/jqplot.categoryAxisRenderer.min.js"></script>
+	<script type="text/javascript" src="/javascripts/plugins/jqplot.pointLabels.min.js"></script>
+	
+	<link rel="stylesheet" type="text/css" href="/stylesheets/jquery.jqplot.css" />
+	<script>
+		// from: http://stackoverflow.com/questions/10420352/converting-file-size-in-bytes-to-human-readable
+		function fileSizeIEC(a,b,c,d,e){
+		 return (b=Math,c=b.log,d=1024,e=c(a)/c(d)|0,a/b.pow(d,e)).toFixed(2)
+		 +' '+(e?'KMGTPEZY'[--e]+'iB':'Bytes')
+		}
+		function fileSizeSI(a,b,c,d,e){
+		 return (b=Math,c=b.log,d=1e3,e=c(a)/c(d)|0,a/b.pow(d,e)).toFixed(2)
+		 +' '+(e?'kMGTPEZY'[--e]+'B':'Bytes')
+		}
+		
+		// from: http://stackoverflow.com/questions/8211744/convert-milliseconds-or-seconds-into-human-readable-form
+		function secondsToStr (temp) {
+			// TIP: to find current time in milliseconds, use:
+			// var  current_time_milliseconds = new Date().getTime();
+
+			// This function does not deal with leap years, however,
+			// it should not be an issue because the output is aproximated.
+
+			function numberEnding (number) { //todo: replace with a wiser code
+					return (number > 1) ? 's' : '';
+			}
+			//var temp = milliseconds / 1000;
+			var years = Math.floor(temp / 31536000);
+			if (years) {
+					return years + ' year' + numberEnding(years);
+			}
+			var days = Math.floor((temp %= 31536000) / 86400);
+			if (days) {
+					return days + ' day' + numberEnding(days);
+			}
+			var hours = Math.floor((temp %= 86400) / 3600);
+			if (hours) {
+					return hours + ' hour' + numberEnding(hours);
+			}
+			var minutes = Math.floor((temp %= 3600) / 60);
+			if (minutes) {
+					return minutes + ' minute' + numberEnding(minutes);
+			}
+			var seconds = temp % 60;
+			if (seconds) {
+					return seconds + ' second' + numberEnding(seconds);
+			}
+			return '<1s'; //'just now' //or other string you like;
+		}
+		
+		function markResultRows(ids) {
+			document.getElementById("resultCount").innerHTML= ids.length + " results";
+			
+			var fileTableRows = document.getElementById("fileTable").getElementsByTagName("tr");
+			for (i in fileTableRows){
+				doReset = true;
+				for (j in ids) {
+					if(ids[j]["id"] == fileTableRows[i].id) {
+						fileTableRows[i].className = "warning";
+						doReset = false;
+						break;
+					}
+				}
+				if(doReset) fileTableRows[i].className = ""
+			}
+			
+		}
+		
+		window.addEventListener("load", function () {
+			function getSarchResults(){
+				var XHR = new XMLHttpRequest();
+				var FD  = new FormData(form);
+
+				// We define what will happen if the data are successfully sent
+				XHR.addEventListener('load', function(event) {
+					markResultRows(JSON.parse(this.responseText));
+				});
+
+				// We define what will happen in case of error
+				XHR.addEventListener('error', function(event) {
+					alert('Something went wrong.');
+				});
+
+				// We setup our request
+				XHR.open('POST', "searchAPI");
+
+				// We just send our FormData object, HTTP headers are set automatically
+				XHR.send(FD);
+			}
+			var form = document.getElementById("searchForm");
+
+			// takeover its submit event.
+			form.addEventListener("submit", function (event) {
+				event.preventDefault();
+				getSarchResults();
+			});
+			
+			var statsData = [{{#stats}}["{{filetype}}", {{sum}}],{{/stats}}];
+			
+			$.jqplot('chartdiv', [statsData], {
+				seriesDefaults:{
+					renderer: jQuery.jqplot.PieRenderer,
+					rendererOptions: {showDataLabels: true}
+				},
+				legend: {
+					show: true, location: 'e'
+				}
+				
+				});
+	});
+	</script>
+</head>
+<meta charset="utf-8">
+<body>
+	<div class="container">
+		<div class="hero-unit">
+			<div class="pull-right">    
+				<a href="/delete" class="btn btn-danger" title="delete all">delete everything</a>
+				<a href="/logout" class="btn btn-warning" title="logout">logout "{{user}}"</a>
+			</div>
+			<div class="pull-left">
+				<a href="/" class="btn btn-inactive" title="repository">repository</a>
+				<a href="/accounts" class="btn btn-success" title="accounts">accounts</a>
+			</div>
+			<div class="text-center">
+				<br><br>
+				<h1><a href="/">BlueBox</a> File Storage</h1>
+				<h2>MySQL/Redis back end with enterprise level retention management, MongoDB session persistence, stateless middleware</h2>
+				<hr>
+				<h3>insert file</h3>
+				<p>
+					<form action="/file" method="POST" enctype="multipart/form-data">
+						<input type="file" name="file" />
+						retain for minutes: <input type="text" name="retentionInterval" value="10"/><br>
+						<input type="submit" class="btn btn-success" value="upload">
+					</form>
+				</p>
+				<hr>
+				<h3>search repository metadata</h3>
+				<p>
+					<form id="searchForm">
+						query: <input type="text" name="q" value=""/><br>
+						<input type="submit" class="btn btn-info" value="search">
+					</form><p id="resultCount"></p>
+				</p>
+				
+				<hr>
+				<h3>content MIME-type statistics</h3>
+				<p id="chartdiv"></p>
+				
+				{{#msg}}<div class="alert alert-info">{{msg}}</div>{{/msg}}
+			</div>
+		</div>
+		<div>
+			<h3>repository content, click on a name to download</h3>
+			<table class="table" id="fileTable">
+				<tr><th>ID</th><th>name</th><th>size</th><th>MIME-type</th><th>inserted at</th><th>retention time left</th><th>inserted by</th><th></th></tr>
+				{{#posts}}
+					<tr id={{id}}>
+						<td>{{id}}</td>
+						<td><a href="file/{{id}}">{{filename}}</a></td>
+						<td><script>document.write(fileSizeSI({{filesize}}) + " / " + fileSizeIEC({{filesize}}));</script></td>
+						<td>{{filetype}}</td>
+						<td>{{insertdate}}</td>
+						<td><script>document.write(secondsToStr({{eta}}));</script></td>
+						<td>{{ownername}}</td>
+						<td><a href="/delfile?id={{id}}" class="btn btn-warning" title="delete this file">delete</a></td>
+					</tr>
+				{{/posts}}
+			</table>
+		</div>
+	</div>
+</body>
+
+</html>

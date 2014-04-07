@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<title>BlueBox File Storage</title>
+	<link href="/stylesheets/bootstrap.css" rel="stylesheet">
+	<style>
+		.hero-unit {
+			margin-top: 60px;
+		}
+	</style>
+	<script src="/javascripts/bootstrap.min.js"></script>
+	<script>
+		// from: http://stackoverflow.com/questions/10420352/converting-file-size-in-bytes-to-human-readable
+		function fileSizeIEC(a,b,c,d,e){
+		 return (b=Math,c=b.log,d=1024,e=c(a)/c(d)|0,a/b.pow(d,e)).toFixed(2)
+		 +' '+(e?'KMGTPEZY'[--e]+'iB':'Bytes')
+		}
+		function fileSizeSI(a,b,c,d,e){
+		 return (b=Math,c=b.log,d=1e3,e=c(a)/c(d)|0,a/b.pow(d,e)).toFixed(2)
+		 +' '+(e?'kMGTPEZY'[--e]+'B':'Bytes')
+		}
+	</script>
+</head>
+<meta charset="utf-8">
+<body>
+	<div class="container">
+		<div class="hero-unit">
+			<div class="text-center">
+				<h1><a href="/">BlueBox</a> File Storage</h1>
+				<h2>login</h2>
+				<p>
+				{{#message}}
+				<p>{{message}}</p>
+				{{/message}}
+				<form action="/login" method="post">
+					<div>
+					<label>Username:</label>
+					<input type="text" name="username"/><br/>
+					</div>
+					<div>
+					<label>Password:</label>
+					<input type="password" name="password"/>
+					</div>
+					<div>
+					<input type="submit" class="btn btn-success" value="Submit"/>
+					</div>
+				</form>	
+				</p>
+				
+			</div>
+		</div>
+	</div>
+</body>
+</html>
