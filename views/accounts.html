@@ -59,6 +59,7 @@
 					
 		// add new account
 		function addAccount(){
+			var form = document.getElementById("accountForm");
 			var XHR = new XMLHttpRequest();
 			var FD  = new FormData(form);
 			XHR.addEventListener('load', function(event) {
