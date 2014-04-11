@@ -9,7 +9,8 @@ var mysql = require('mysql');
 var redis = require('redis');
 var passport = require('passport');
 var LocalStrategy = require('passport-local').Strategy;
-var MongoStore = require('connect-mongo')(express);
+//var MongoStore = require('connect-mongo')(express);
+//var RedisStore = require('connect-redis')(express);
 var mongo = require('mongodb');
 
 var fs = require('fs');
@@ -56,7 +57,7 @@ if (process.env.VCAP_SERVICES) {
 	var twilioMyNumber = '+18022824507';
 	
 	var mongoCredentials = services['mongodb-2.2'][0].credentials;
-	mongoCredentials.auto_reconnect = "true";
+	//mongoCredentials.auto_reconnect = "true";
 	mongoInitUsers();
 }
 
@@ -85,12 +86,21 @@ app.use(express.logger());
 app.use(express.bodyParser());
 app.use(express.methodOverride());
 
-app.use(express.cookieParser());
+app.use(express.cookieParser('SECRET'));
+app.use(express.cookieSession());
 
-app.use(express.session({
-	secret: "123456",
-	store: new MongoStore(mongoCredentials)
-	}));
+//app.use(express.session({
+//	store: new RedisStore({
+//		client: redisSessionClient
+//	}),
+//	secret: '123456'
+//}));
+
+//app.use(express.session({secret: "123456"}));
+//app.use(express.session({
+//	secret: "123456",
+//	store: new MongoStore(mongoCredentials)
+//	}));
 
 app.use(passport.initialize());
 app.use(passport.session());
@@ -217,8 +227,10 @@ app.get('/logout', ensureAuthenticated, function(req, res){
 
 // check authentication
 function ensureAuthenticated(req, res, next) {
-  if (req.isAuthenticated()) { return next(); }
-  res.redirect('/login');
+	console.error("checking auth...");
+	if (req.isAuthenticated()) {console.error("... authenticated"); return next(); }
+	console.error("... not authenticated");
+	res.redirect('/login');
 }
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
@@ -508,7 +520,7 @@ function disposalSweep() {
 
 function mongoExecute(f) {
 	console.error("connecting to mongoDB");
-	mongo.Db.connect(mongoCredentials.url, function(err, db) {
+	mongo.Db.connect(mongoCredentials.url, { auto_reconnect: true }, function(err, db) {
 		console.error("connected to mongoDB " + err);
 		if (err) return new Error("mongoDB connection error: " + err);
 		f(db);
