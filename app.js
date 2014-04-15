@@ -547,7 +547,7 @@ function mongoInitUsers() {
 			var col = db.collection("accounts");
 			
 			col.ensureIndex({username: 1}, {unique: true, sparse: true, dropDups: true}, function(err){
-				if (err) console.error("mongoDB error creating index: " + err);
+				if (err) db.close(), console.error("mongoDB error creating index: " + err);
 				col.insert(adminUserRecord, function(err){
 						console.error(err);
 						db.close();
@@ -602,6 +602,7 @@ function mongoInsertAccount(account, fn) {
 	mongoExecute(function(db){
 		var col = db.collection("accounts");
 		col.insert(account, function(err){
+				db.close();
 				if (err) fn(new Error('Error inserting account into MongoDB: ' +err));
 				fn(null);
 		});	
@@ -614,6 +615,7 @@ function mongoDeleteAccount(id, fn) {
 		mongoExecute(function(db){
 			var col = db.collection("accounts");
 			col.remove({_id: id}, function(err){
+					db.close();
 					if (err) fn(new Error('Error removing account from MongoDB: ' +err));
 					fn(null);
 			});	
